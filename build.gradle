@@ -118,8 +118,8 @@ tasks.register("objsizer", Jar) {
 
 	manifest {
 		attributes (
-			"Premain-Class": "com.cienet.passenger.test.ObjectSizeFetcher",
-			"Main-Class": "com.cienet.passenger.test.TestMain"
+			"Premain-Class": "io.kmc.passenger.test.ObjectSizeFetcher",
+			"Main-Class": "io.kmc.passenger.test.TestMain"
 		)
 	}
 }
