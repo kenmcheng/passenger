@@ -1,0 +1,17 @@
+package io.kmc.passenger.test;
+
+import java.lang.instrument.Instrumentation;
+
+public class ObjectSizeFetcher {
+    
+    private static Instrumentation instrumentation;
+
+    public static void premain(String args, Instrumentation inst) {
+        instrumentation = inst;
+        System.out.println("Pre-main finished");
+    }
+
+    public static long getObjectSize(Object o) {
+        return instrumentation.getObjectSize(o);
+    } 
+}

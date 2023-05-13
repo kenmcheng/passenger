@@ -1,0 +1,125 @@
+plugins {
+	id "org.jetbrains.kotlin.jvm" version "1.7.21"
+	id "application"
+	id "maven-publish"
+}
+
+group = "io.kmc"
+version = "1.0.0-SNAPSHOT"
+description = "An action pipeline for pre/post callback routines"
+
+sourceSets {
+	main {
+		kotlin {
+			srcDir "src/main/kotlin"
+		}
+	}
+
+	test {
+		 java {
+		 	srcDir "src/test/java"
+		 }
+		// use default resources directory
+	}
+}
+
+application {
+	mainClass = "io.kmc.passenger.VersionKt"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
+
+	testImplementation "org.mockito:mockito-core:4.+"
+	testImplementation "org.junit.jupiter:junit-jupiter:5.9.1"
+	
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.1"
+
+	// logging
+	testImplementation "org.slf4j:slf4j-api:1.7.36"
+	testRuntimeOnly "org.apache.logging.log4j:log4j-slf4j-impl:2.19.0"
+	testRuntimeOnly "org.apache.logging.log4j:log4j-core:2.19.0"
+}
+
+jar {
+	manifest {
+		attributes (
+			"Main-Class": "io.kmc.passenger.VersionKt",
+			"Implementation-Version": archiveVersion
+		)
+	}
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+        exceptionFormat "full"
+        events "passed", "failed", "skipped"
+        showStandardStreams true
+    }
+}
+
+publishing {
+	repositories {
+		
+		maven {
+			name = "LocalFile"
+			def releasesUrl = layout.buildDirectory.dir("repos/releases")
+            def snapshotsUrl = layout.buildDirectory.dir("repos/snapshots")
+			url = version.endsWith("SNAPSHOT") ? snapshotsUrl : releasesUrl
+		}
+
+		def repoConfig = file("repository.properties")
+		if (repoConfig.exists()) {
+			def repoProperties = new Properties()
+			repoConfig.withInputStream { repoProperties.load(it) }
+
+			maven {
+				def releasesUrl = repoProperties.releasesRepoUrl
+				def snapshotsUrl = repoProperties.snapshotsRepoUrl
+				url = version.endsWith("SNAPSHOT") ? snapshotsUrl : releasesUrl
+				credentials {
+					username = repoProperties.repoUsername
+					password = repoProperties.repoPassword
+				}
+			}
+		}
+	}
+
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+			pom {
+				// name = project.name
+                description = project.description
+				// licenses {
+				// 	license {
+				// 		name = "The Apache License, Version 2.0"
+				// 		url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+				// 	}
+				// }
+			}
+
+        }
+    }
+}
+
+tasks.register("objsizer", Jar) {
+	archiveBaseName = "objsizer"
+	from sourceSets.test.output
+	from sourceSets.main.output
+
+	description "A Java instrument package for fetching object sizes"
+
+	manifest {
+		attributes (
+			"Premain-Class": "com.cienet.passenger.test.ObjectSizeFetcher",
+			"Main-Class": "com.cienet.passenger.test.TestMain"
+		)
+	}
+}
